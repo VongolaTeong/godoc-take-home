@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: consult
+
+  datasource:
+    # Overridden on Render via SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD env vars.
+    url: jdbc:postgresql://localhost:5433/consult
+    username: consult
+    password: consult
+
+  jpa:
+    # Flyway owns the schema; Hibernate must never generate or alter it.
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+app:
+  # Idempotent demo seeder: generates bookable slots for the seeded doctors on startup.
+  seed-slots: true

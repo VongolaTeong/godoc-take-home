@@ -1,0 +1,23 @@
+# Local development database only. The app itself runs via `./mvnw spring-boot:run`
+# (or the root Dockerfile, which is what Render builds).
+# Host port 5433 to avoid clashing with any locally installed Postgres.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: consult-postgres
+    environment:
+      POSTGRES_DB: consult
+      POSTGRES_USER: consult
+      POSTGRES_PASSWORD: consult
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U consult -d consult"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
