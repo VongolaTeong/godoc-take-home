@@ -1,0 +1,7 @@
+.git
+**/node_modules
+**/dist
+backend/target
+CLAUDE.md
+test.md
+README.md
