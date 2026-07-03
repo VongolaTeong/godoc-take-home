@@ -1,0 +1,28 @@
+:root {
+  --text: #1f2a2e;
+  --muted: #64748b;
+  --bg: #f4f7f8;
+  --border: #e2e8ec;
+  --accent: #0f766e;
+  --accent-dark: #0b5a54;
+  --accent-soft: #ecfdf9;
+  --accent-border: #99e5d8;
+
+  font-family: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
