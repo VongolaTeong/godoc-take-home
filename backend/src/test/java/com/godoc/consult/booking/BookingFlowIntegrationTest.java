@@ -197,6 +197,26 @@ class BookingFlowIntegrationTest extends AbstractIntegrationTest {
         assertThat(mine.get(0).get("doctorName").asText()).startsWith("Dr. Test");
     }
 
+    @Test
+    void corsPreflightAllowsTheConfiguredUiOrigin() {
+        // Origin configured in AbstractIntegrationTest; mirrors the Cloudflare Pages setup.
+        var headers = new org.springframework.http.HttpHeaders();
+        headers.setOrigin("https://ui.example.test");
+        headers.setAccessControlRequestMethod(org.springframework.http.HttpMethod.POST);
+        headers.setAccessControlRequestHeaders(
+                List.of("Content-Type", "X-Patient-Id", "Idempotency-Key"));
+
+        ResponseEntity<Void> preflight = rest.exchange("/api/v1/bookings",
+                org.springframework.http.HttpMethod.OPTIONS,
+                new org.springframework.http.HttpEntity<>(headers), Void.class);
+
+        assertThat(preflight.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(preflight.getHeaders().getAccessControlAllowOrigin())
+                .isEqualTo("https://ui.example.test");
+        assertThat(preflight.getHeaders().getAccessControlAllowHeaders())
+                .contains("Content-Type", "X-Patient-Id", "Idempotency-Key");
+    }
+
     private List<String> availableSlotIds() {
         ResponseEntity<JsonNode> response =
                 rest.getForEntity("/api/v1/doctors/" + doctorId + "/slots", JsonNode.class);

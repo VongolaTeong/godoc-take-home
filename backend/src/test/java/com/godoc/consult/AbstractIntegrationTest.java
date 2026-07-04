@@ -31,7 +31,10 @@ import org.springframework.http.ResponseEntity;
  * container. Tests create their own doctors/patients/slots (random UUIDs) so they are
  * isolated from each other and from the demo seed data.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        // Exercises the CORS config for cross-origin UI deployments (Cloudflare Pages).
+        properties = "app.cors.allowed-origins=https://ui.example.test")
 @Import(TestcontainersConfiguration.class)
 public abstract class AbstractIntegrationTest {
 

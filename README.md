@@ -8,9 +8,11 @@ The centerpiece is the **double-booking defense** and the automated test that pr
 50 truly concurrent requests for one slot always produce exactly one booking, 49 clean
 `409 Conflict` responses, and exactly one active row in the database.
 
-**Live demo:** _added after deploy — see [Deploying to Render](#deploying-to-render-free-tier)._
-Note: on Render's free tier the instance spins down when idle, so the **first request can
-take up to a minute** (JVM cold start). That is the platform, not the app.
+**Live demo:** UI: _Cloudflare Pages URL here_ · API: _Render URL here_
+
+Note: the API runs on Render's free tier, which spins the instance down when idle — the
+**first request can take up to a minute** (JVM cold start). The UI loads instantly from
+Cloudflare's CDN, so give the first data fetch a moment.
 
 ---
 
@@ -23,7 +25,7 @@ take up to a minute** (JVM cold start). That is the platform, not the app.
 | **Flyway** | Schema is versioned, reviewable SQL; Hibernate never generates DDL (`ddl-auto: none`). | — |
 | **Testcontainers** | Integration and race tests run against real Postgres 16, the same engine as production. | Slower than H2-style tests; worth it because the concurrency guarantees under test live in Postgres itself. |
 | **Vue 3 + TypeScript + Vite** | Thin demo UI in the frontend stack I know best; typed against the API DTOs. | Kept deliberately minimal — the brief's weight is on the backend. |
-| **Docker (single image)** | The Vue build is baked into the Spring Boot jar: one artifact, one Render service, same origin (no CORS anywhere). | Separate static-site hosting would give CDN caching, at the cost of a second service and CORS/config surface. |
+| **Docker (single image) + Cloudflare Pages** | The Vue build is baked into the Spring Boot jar, so the Render service alone is a complete same-origin deployment. The UI is *additionally* deployed to Cloudflare Pages for CDN edge delivery (and a UI that stays up while Render cold-starts), with CORS on the API scoped to that origin. | Pages-only would be simpler, but keeping the jar self-contained preserves a one-artifact fallback and keeps local Docker runs trivial. |
 
 ---
 
@@ -174,25 +176,44 @@ curl -i -X POST localhost:8080/api/v1/bookings \
   -d "{\"slotId\":\"$SLOT\"}"                      # 201 — repeat it: 200, same booking
 ```
 
----
+## Deployment
 
-## Deploying to Render (free tier)
+Two free-tier services: the API (with the same-origin UI baked in) on **Render**, and the
+primary UI on **Cloudflare Pages**.
+
+### Backend — Render
 
 1. **Database**: New → PostgreSQL, free plan. ⚠️ Render's free Postgres **expires 30 days
-   after creation** — create it when you're ready to demo, not at project start.
-2. **Web service**: New → Web Service → this repo. Render auto-detects the root
-   `Dockerfile`. Instance type: free.
-3. **Environment variables** (from the database's *internal* connection info — note the
-   URL must be the JDBC form, not Render's `postgres://` string):
-   - `SPRING_DATASOURCE_URL` = `jdbc:postgresql://<internal-host>:5432/<db>`
-   - `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`
-4. **Health check path**: `/actuator/health`.
-5. Deploy. Flyway migrates and seeds on boot; the UI is served at the service root.
+   after creation** — create it when ready to demo, not at project start.
+2. **Web service**: New → Web Service → this repo; Render auto-detects the root
+   `Dockerfile`. Instance type: free. Health check path: `/actuator/health`.
+3. **Environment variables** — from the database's *internal* connection string
+   `postgresql://USER:PASSWORD@HOST/DBNAME`, split into (JDBC URLs don't carry
+   credentials inline):
+   - `SPRING_DATASOURCE_URL` = `jdbc:postgresql://HOST:5432/DBNAME`
+   - `SPRING_DATASOURCE_USERNAME` = `USER`
+   - `SPRING_DATASOURCE_PASSWORD` = `PASSWORD`
+   - `APP_CORS_ALLOWEDORIGINS` = `https://<your-project>.pages.dev` (add this after step
+     4 below; without it the API rejects the Pages UI's cross-origin calls)
 
-The JVM is already sized for the 512MB free instance via `JAVA_TOOL_OPTIONS` in the
-Dockerfile.
+Flyway migrates and seeds on boot; the JVM is already sized for the 512MB instance via
+`JAVA_TOOL_OPTIONS` in the Dockerfile. The Render URL serves the full app by itself —
+the Cloudflare UI is layered on top, not a dependency.
 
----
+### Frontend — Cloudflare Pages
+
+4. Cloudflare dashboard → Workers & Pages → Create → Pages → connect this repo:
+   - **Root directory**: `frontend`
+   - **Build command**: `npm run build`
+   - **Build output directory**: `dist`
+   - **Environment variable**: `VITE_API_BASE_URL` = `https://<your-service>.onrender.com`
+     (build-time: changing it requires a redeploy)
+5. Deploy, then put the resulting `*.pages.dev` origin into `APP_CORS_ALLOWEDORIGINS` on
+   the Render service (step 3) and redeploy/restart it.
+
+The API allows only `GET`/`POST` with the three headers the client uses
+(`Content-Type`, `X-Patient-Id`, `Idempotency-Key`) from that origin — covered by a
+CORS preflight integration test.
 
 ## Assumptions, scope cuts, and known limitations
 

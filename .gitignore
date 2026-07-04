@@ -9,8 +9,11 @@ frontend/dist/
 .vscode/
 .DS_Store
 
-# Local env
+# Local env — .env.* variants can hold real credentials (e.g. .env.prod with the
+# Render database password); only the checked-in .env.example is allowed through.
 .env
+.env.*
+!.env.example
 *.local
 
 # Assessment brief — kept out of the published repo on purpose

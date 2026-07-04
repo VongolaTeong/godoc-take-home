@@ -12,8 +12,14 @@ export class ApiError extends Error {
   }
 }
 
+// Same-origin deployments (UI served from the Spring Boot jar) leave this unset.
+// Cross-origin deployments (UI on Cloudflare Pages, API on Render) set
+// VITE_API_BASE_URL at build time; the API must then allow the UI's origin via
+// its app.cors.allowed-origins property.
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, init)
+  const response = await fetch(API_BASE + path, init)
   if (!response.ok) {
     let title = response.statusText
     let detail = 'Request failed'

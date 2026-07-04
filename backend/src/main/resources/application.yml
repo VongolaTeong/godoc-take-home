@@ -30,3 +30,8 @@ management:
 app:
   # Idempotent demo seeder: generates bookable slots for the seeded doctors on startup.
   seed-slots: true
+  cors:
+    # Comma-separated origins allowed to call /api/** cross-origin, e.g. the Cloudflare
+    # Pages URL. Empty = CORS disabled (the UI served from the jar is same-origin).
+    # Env override (Spring relaxed binding): APP_CORS_ALLOWEDORIGINS
+    allowed-origins: ""
