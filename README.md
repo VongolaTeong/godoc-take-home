@@ -8,7 +8,11 @@ The centerpiece is the **double-booking defense** and the automated test that pr
 50 truly concurrent requests for one slot always produce exactly one booking, 49 clean
 `409 Conflict` responses, and exactly one active row in the database.
 
-**Live demo:** UI: _Cloudflare Pages URL here_ · API: _Render URL here_
+**Live demo:** 
+
+UI: https://godoc-take-home.pages.dev/ 
+
+API: https://godoc-take-home.onrender.com
 
 Note: the API runs on Render's free tier, which spins the instance down when idle — the
 **first request can take up to a minute** (JVM cold start). The UI loads instantly from
