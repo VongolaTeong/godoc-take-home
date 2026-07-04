@@ -32,6 +32,6 @@ app:
   seed-slots: true
   cors:
     # Comma-separated origins allowed to call /api/** cross-origin, e.g. the Cloudflare
-    # Pages URL. Empty = CORS disabled (the UI served from the jar is same-origin).
-    # Env override (Spring relaxed binding): APP_CORS_ALLOWEDORIGINS
-    allowed-origins: ""
+    # UI URL, no trailing slash. Empty = CORS disabled (the UI served from the jar is
+    # same-origin and needs none). Set via the CORS_ALLOWED_ORIGINS env var.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}

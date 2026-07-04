@@ -193,8 +193,10 @@ primary UI on **Cloudflare Pages**.
    - `SPRING_DATASOURCE_URL` = `jdbc:postgresql://HOST:5432/DBNAME`
    - `SPRING_DATASOURCE_USERNAME` = `USER`
    - `SPRING_DATASOURCE_PASSWORD` = `PASSWORD`
-   - `APP_CORS_ALLOWEDORIGINS` = `https://<your-project>.pages.dev` (add this after step
-     4 below; without it the API rejects the Pages UI's cross-origin calls)
+   - `CORS_ALLOWED_ORIGINS` = the UI origin, e.g. `https://<your-project>.pages.dev` —
+     **no trailing slash**, it must equal the browser's `Origin` header exactly. Add this
+     after step 4 below; without it the API rejects the UI's cross-origin calls with
+     `403 Invalid CORS request`.
 
 Flyway migrates and seeds on boot; the JVM is already sized for the 512MB instance via
 `JAVA_TOOL_OPTIONS` in the Dockerfile. The Render URL serves the full app by itself —
@@ -208,8 +210,8 @@ the Cloudflare UI is layered on top, not a dependency.
    - **Build output directory**: `dist`
    - **Environment variable**: `VITE_API_BASE_URL` = `https://<your-service>.onrender.com`
      (build-time: changing it requires a redeploy)
-5. Deploy, then put the resulting `*.pages.dev` origin into `APP_CORS_ALLOWEDORIGINS` on
-   the Render service (step 3) and redeploy/restart it.
+5. Deploy, then put the resulting origin into `CORS_ALLOWED_ORIGINS` on the Render
+   service (step 3); saving the env var triggers a restart automatically.
 
 The API allows only `GET`/`POST` with the three headers the client uses
 (`Content-Type`, `X-Patient-Id`, `Idempotency-Key`) from that origin — covered by a
